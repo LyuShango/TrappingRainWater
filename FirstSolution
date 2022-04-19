@@ -1,0 +1,126 @@
+class Solution {
+    public static int volumn;
+    public static int[][] record;
+    
+    public static void Merge(int[][] intervals, int left, int right, int middle){
+        int llen = middle-left+1;
+        int rlen = right-middle;
+        int len = right-left+1;
+        int[][] ans = new int[len][2];
+        int i=left;
+        int j=middle+1;
+        int k=0;
+        while(i<=middle && j<=right){
+            if(intervals[i][0] <= intervals[j][0]){
+                ans[k] = intervals[i];
+                i++;
+                k++;
+            }
+            else{
+                ans[k] = intervals[j];
+                j++;
+                k++;
+            }
+        }
+        if(i<=middle){
+            while(i<=middle){
+                ans[k] = intervals[i];
+                i++;
+                k++;
+            }
+        }
+        if(j<=right){
+            while(j<=right){
+                ans[k] = intervals[j];
+                j++;
+                k++;
+            }
+        }
+        for(int p=0;p<len;p++){
+            intervals[p+left] = ans[p];
+        }
+    }
+
+    public static void MergeSort(int[][] intervals, int left, int right){
+        if(left != right){
+            int middle = (left+right)/2;
+            MergeSort(intervals, left, middle);
+            MergeSort(intervals, middle+1, right);
+            Merge(intervals, left, right, middle);
+            return;
+        }else{
+            return;
+        }
+    }
+
+    public static int leftFarMax(int p){
+        int max=-1;
+        for(int i=p-1; i>=0; i--){
+            if(record[i][1] < record[p][1]){
+                max=i;
+                break;
+            }
+        }
+        while(max-1>=0 && record[max][0]==record[max-1][0]){
+            max = max-1;
+        }
+        return max;
+    }
+
+    public static int rightFarMax(int p){
+        int max=-1;
+        for(int i=p-1; i>=0; i--){
+            if(record[i][1] > record[p][1]){
+                max=i;
+                break;
+            }
+        }
+        return max;
+    }
+
+    public static void calVolumn(int[] height, int left, int right, int p){
+        if(left<record[p][1]){
+            int lmax=leftFarMax(p);
+            if(lmax!=-1){
+                if(record[lmax][1]==record[p][1]-1){
+                    calVolumn(height, left, record[lmax][1], lmax);
+                }else{
+                    int loss=0;
+                    for(int i=record[lmax][1]+1; i<record[p][1]; i++){
+                        loss+=height[i];
+                    }
+                    volumn += (record[lmax][0] * (record[p][1]-record[lmax][1]-1) - loss);
+                    calVolumn(height, left, record[lmax][1], lmax);
+                }
+            }
+        }
+        if(right>record[p][1]){
+            int rmax=rightFarMax(p);
+            if(rmax!=-1){
+                if(record[rmax][1]==record[p][1]+1){
+                    calVolumn(height, record[rmax][1], right, rmax);
+                }else{
+                    int loss=0;
+                    for(int i=record[p][1]+1; i<record[rmax][1]; i++){
+                        loss+=height[i];
+                    }
+                    volumn += (record[rmax][0] * (record[rmax][1]-record[p][1]-1) - loss);
+                    calVolumn(height, record[rmax][1], right, rmax);
+                }
+            }
+        }
+        return;
+    }
+    
+    public int trap(int[] height) {
+        int size = height.length;
+        record = new int[size][2];
+        for(int i=0; i<size; i++){
+            record[i]= new int[] {height[i], i};
+        }
+        MergeSort(record, 0, size-1);
+        volumn=0;
+        calVolumn(height, 0, size-1, size-1);
+        return volumn;
+    }
+}
